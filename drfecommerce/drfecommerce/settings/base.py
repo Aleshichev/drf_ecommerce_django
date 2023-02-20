@@ -90,4 +90,15 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Django DRF Ecommerce",
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SCHEMA_PATH_PREFIX': '/api/',
+
+
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+        "showExtensions": True,
+    },
 }
