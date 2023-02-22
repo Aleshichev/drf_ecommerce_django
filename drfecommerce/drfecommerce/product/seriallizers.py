@@ -1,6 +1,14 @@
 from rest_framework import serializers
 
-from .models import Brand, Category, Product, ProductImage, ProductLine
+from .models import (
+    Attribute,
+    AttributeValue,
+    Brand,
+    Category,
+    Product,
+    ProductImage,
+    ProductLine,
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -20,11 +28,32 @@ class BrandSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        exclude = ("id", "productline",)
+        exclude = (
+            "id",
+            "productline",
+        )
+
+
+class AttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attribute
+        fields = ("name",)
+
+
+class AttributeValueSerializer(serializers.ModelSerializer):
+    attribute = AttributeSerializer(many=False)
+
+    class Meta:
+        model = AttributeValue
+        fields = (
+            "attribute",
+            "attribute_value",
+        )
 
 
 class ProductLineSerializer(serializers.ModelSerializer):
     product_image = ProductImageSerializer(many=True)
+    attribute_value = AttributeValueSerializer(many=True)
 
     class Meta:
         model = ProductLine
@@ -34,6 +63,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
             "stock_qty",
             "order",
             "product_image",
+            "attribute_value",
         )
 
 
