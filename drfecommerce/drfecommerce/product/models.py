@@ -5,18 +5,18 @@ from mptt.models import MPTTModel, TreeForeignKey
 from .fields import OrderField
 
 
-class ActiveQueryset(models.QuerySet):
-    def isactive(self):
+class IsActiveQueryset(models.QuerySet):
+    def is_active(self):
         return self.filter(is_active=True)
 
 
 class Category(MPTTModel):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=255)
+    name = models.CharField(max_length=235, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
 
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
@@ -28,8 +28,8 @@ class Category(MPTTModel):
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=False)
-    
-    objects = ActiveQueryset.as_manager()
+
+    objects = IsActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -50,7 +50,7 @@ class Product(models.Model):
         on_delete=models.PROTECT,
     )
     # order = models.PositiveBigIntegerField()
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -89,7 +89,7 @@ class ProductLine(models.Model):
         related_name="product_line_attribute_value",
     )
 
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     def clean(self):
         qs = ProductLine.objects.filter(product=self.product)
