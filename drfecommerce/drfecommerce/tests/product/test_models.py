@@ -1,7 +1,9 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from drfecommerce.product.models import Category
+
+from drfecommerce.product.models import Category, Product, ProductLine
+
 # from django.core.exceptions import ValidationError
 
 # from drfecommerce.product.models import ProductTypeAttribute
@@ -64,37 +66,124 @@ class TestCategoryModel:
         qs = Category.objects.count()
         assert qs == 3
 
-# class TestBrandModel:
-#     def test_str_method(self, brand_factory):
-#         obj = brand_factory(name="test_brand")
 
-#         assert obj.__str__() == "test_brand"
+class TestProductModel:
+    def test_str_method(self, product_factory):
+        obj = product_factory(name="test_product")
+
+        assert obj.__str__() == "test_product"
+
+    def test_name_max_length(self, product_factory):
+        name = "x" * 236
+        obj = product_factory(name=name)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
+
+    def test_slug_max_length(self, product_factory):
+        slug = "x" * 256
+        obj = product_factory(slug=slug)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
+
+    def test_pid_max_length(self, product_factory):
+        pid = "x" * 11
+        obj = product_factory(pid=pid)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
+
+    def test_is_digital_false_default(self, product_factory):
+        obj = product_factory(is_digital=False)
+        assert obj.is_digital is False
+
+    def test_fk_product_on_delete_protect(self, product_factory, category_factory):
+        obj1 = category_factory()
+        product_factory(category=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
+
+    def test_return_product_active_only_true(self, product_factory):
+        product_factory(is_active=True)
+        product_factory(is_active=True)
+        product_factory(is_active=False)
+        qs = Product.objects.is_active().count()
+        assert qs == 2
+
+    def test_return_product_active_only_false(self, product_factory):
+        product_factory(is_active=True)
+        product_factory(is_active=True)
+        product_factory(is_active=False)
+        qs = Product.objects.count()
+        assert qs == 3
 
 
-# class TestProductModel:
-#     def test_str_method(self, product_factory):
-#         obj = product_factory(name="test_product")
+class TestProductLineModel:
+    def test_str_method(self, product_line_factory):
+        obj = product_line_factory(sku="12345")
+        assert obj.__str__() == "12345"
 
-#         assert obj.__str__() == "test_product"
+    def test_duplicate_order_values(self, product_line_factory, product_factory):
+        obj = product_factory()
+        product_line_factory(order=1, product=obj)
+        with pytest.raises(ValidationError):
+            product_line_factory(order=1, product=obj).clean()
+
+    def test_field_decimal_placrs(self, product_line_factory):
+        price = 1.001
+        with pytest.raises(ValidationError):
+            product_line_factory(price=price)
+
+    def test_field_price_max_digits(self, product_line_factory):
+        price = 1999.01
+        with pytest.raises(ValidationError):
+            product_line_factory(price=price)
+
+    def test_field_sku_max_length(self, product_line_factory):
+        sku = "x" * 11
+        with pytest.raises(ValidationError):
+            product_line_factory(sku=sku)
+
+    def test_is_active_false_default(self, product_line_factory):
+        obj = product_line_factory(is_active=False)
+        assert obj.is_active is False
+
+    def test_fk_product_on_delete_protect(self, product_factory, product_line_factory):
+        obj1 = product_factory()
+        product_line_factory(product=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
+
+    def test_return_product_active_only_true(self, product_line_factory):
+        product_line_factory(is_active=True)
+        product_line_factory(is_active=True)
+        product_line_factory(is_active=False)
+        qs = ProductLine.objects.is_active().count()
+        assert qs == 2
+
+    def test_return_product_active_only_false(self, product_line_factory):
+        product_line_factory(is_active=True)
+        product_line_factory(is_active=True)
+        product_line_factory(is_active=False)
+        qs = ProductLine.objects.count()
+        assert qs == 3
 
 
-# class TestProductLineModel:
-#     def test_str_method(self, product_line_factory, attribute_value_factory):
-#         attr = attribute_value_factory(attribute_value="test")
-#         obj = product_line_factory(sku="12345", attribute_value=(attr,))
-#         assert obj.__str__() == "12345"
+class TestProductImageModel:
+    def test_str_method(self, product_image_factory, product_line_factory):
+        obj1 = product_line_factory(sku="12345")
+        obj2 = product_image_factory(order=1, product_line=obj1)
 
-#     def test_duplicate_order_values(self, product_line_factory, product_factory):
-#         obj = product_factory()
-#         product_line_factory(order=1, product=obj)
-#         with pytest.raises(ValidationError):
-#             product_line_factory(order=1, product=obj).clean()
+        assert obj2.__str__() == "12345_img"
 
+    def test_alternative_text_field_length(self, product_image_factory):
+        alternative_text = "x" * 101
+        with pytest.raises(ValidationError):
+            product_image_factory(alternative_text=alternative_text)
 
-# class TestProductImageModel:
-#     def test_str_method(self, product_image_factory):
-#         obj = product_image_factory(url="test.jpg")
-#         assert obj.__str__() == "test.jpg"
+    def test_duplicate_order_values(self, product_image_factory, product_line_factory):
+        obj = product_line_factory(sku="12345")
+        product_image_factory(order=1, product_line=obj)
+        with pytest.raises(ValidationError):
+            product_image_factory(order=1, product_line=obj).clean()
 
 
 # class TestProductTypeModel:

@@ -1,15 +1,8 @@
 import factory
 
-from drfecommerce.product.models import (
-    # Attribute,
-    # AttributeValue,
-    # Brand,
-    Category,
-    # Product,
-    # ProductImage,
-    # ProductLine,
-    # ProductType,
-)
+from drfecommerce.product.models import Category, Product, ProductLine, ProductImage
+
+# Attribute,; AttributeValue,; ProductType,;
 
 
 class CategoryFactory(factory.django.DjangoModelFactory):
@@ -20,11 +13,45 @@ class CategoryFactory(factory.django.DjangoModelFactory):
     slug = factory.Sequence(lambda n: "test_slug_%d" % n)
 
 
-# class BrandFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = Brand
+class ProductFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Product
 
-#     name = factory.Sequence(lambda n: "Brand_%d" % n)
+    name = factory.Sequence(lambda n: "Category_product_name%d" % n)
+    pid = factory.Sequence(lambda n: "0000_%d" % n)
+    description = "test_description"
+    is_digital = False
+    category = factory.SubFactory(CategoryFactory)
+    is_active = True
+    # product_type = factory.SubFactory(ProductTypeFactory)
+
+
+class ProductLineFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductLine
+
+    price = 10.00
+    sku = "0123456789"
+    stock_qty = 1
+    product = factory.SubFactory(ProductFactory)
+    is_active = True
+    weight = 100
+
+
+#     @factory.post_generation
+#     def attribute_value(self, create, extracted, **kwargs):
+#         if not create or not extracted:
+#             return
+#         self.attribute_value.add(*extracted)
+
+
+class ProductImageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductImage
+
+    alternative_text = "test alternative text"
+    url = "test.jpg"
+    product_line = factory.SubFactory(ProductLineFactory)
 
 
 # class AttributeFactory(factory.django.DjangoModelFactory):
@@ -54,42 +81,3 @@ class CategoryFactory(factory.django.DjangoModelFactory):
 #         if not create or not extracted:
 #             return
 #         self.attribute.add(*extracted)
-
-
-# class ProductFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = Product
-
-#     name = "test_product"
-#     description = "test_description"
-#     is_digital = True
-#     brand = factory.SubFactory(BrandFactory)
-#     category = factory.SubFactory(CategoryFactory)
-#     is_active = True
-#     product_type = factory.SubFactory(ProductTypeFactory)
-
-
-# class ProductLineFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = ProductLine
-
-#     price = 10.00
-#     sku = "12345"
-#     stock_qty = 1
-#     product = factory.SubFactory(ProductFactory)
-#     is_active = True
-
-#     @factory.post_generation
-#     def attribute_value(self, create, extracted, **kwargs):
-#         if not create or not extracted:
-#             return
-#         self.attribute_value.add(*extracted)
-
-
-# class ProductImageFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = ProductImage
-
-#     alternative_text = "test alternative text"
-#     url = "test.jpg"
-#     productline = factory.SubFactory(ProductLineFactory)
