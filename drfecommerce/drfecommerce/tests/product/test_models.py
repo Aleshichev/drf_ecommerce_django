@@ -73,6 +73,14 @@ class TestProductModel:
 
         assert obj.__str__() == "test_product"
 
+    def test_fk_product_type_on_delete_protect(
+        self, product_type_factory, product_factory
+    ):
+        obj1 = product_type_factory()
+        product_factory(product_type=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
+
     def test_name_max_length(self, product_factory):
         name = "x" * 236
         obj = product_factory(name=name)
@@ -117,9 +125,34 @@ class TestProductModel:
 
 
 class TestProductLineModel:
+    def test_duplicate_attribute_inserts(
+        self,
+        product_line_factory,
+        attribute_factory,
+        attribute_value_factory,
+        product_line_attribute_value_factory,
+    ):
+        obj1 = attribute_factory(name="shoe-color")
+        obj2 = attribute_value_factory(attribute_value="red", attribute=obj1)
+        obj3 = attribute_value_factory(attribute_value="blue", attribute=obj1)
+        obj4 = product_line_factory()
+        product_line_attribute_value_factory(attribute_value=obj2, product_line=obj4)
+        with pytest.raises(ValidationError):
+            product_line_attribute_value_factory(
+                attribute_value=obj3, product_line=obj4
+            )
+
     def test_str_method(self, product_line_factory):
         obj = product_line_factory(sku="12345")
         assert obj.__str__() == "12345"
+
+    def test_fk_product_type_on_delete_protect(
+        self, product_type_factory, product_line_factory
+    ):
+        obj1 = product_type_factory()
+        product_line_factory(product_type=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
 
     def test_duplicate_order_values(self, product_line_factory, product_factory):
         obj = product_factory()
@@ -186,24 +219,38 @@ class TestProductImageModel:
             product_image_factory(order=1, product_line=obj).clean()
 
 
-# class TestProductTypeModel:
-#     def test_str_method(self, product_type_factory, attribute_factory):
-#         test = attribute_factory(name="test")
-#         obj = product_type_factory.create(name="test_type", attribute=(test,))
+class TestProductTypeModel:
+    def test_str_method(self, product_type_factory):
+        obj = product_type_factory.create(name="test_type")
+        assert obj.__str__() == "test_type"
 
-#         x = ProductTypeAttribute.objects.get(id=1)
-#         print(x)
-#         assert obj.__str__() == "test_type"
-
-
-# class TestAttributeModel:
-#     def test_str_method(self, attribute_factory):
-#         obj = attribute_factory(name="test_attribute")
-#         assert obj.__str__() == "test_attribute"
+    def test_name_field_max_length(self, product_type_factory):
+        name = "x" * 101
+        obj = product_type_factory(name=name)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
 
 
-# class TestAttributeValueModel:
-#     def test_str_mothod(self, attribute_value_factory, attribute_factory):
-#         obj_a = attribute_factory(name="test_attribute")
-#         obj_b = attribute_value_factory(attribute_value="test_value", attribute=obj_a)
-#         assert obj_b.__str__() == "test_attribute-test_value"
+class TestAttributeModel:
+    def test_str_method(self, attribute_factory):
+        obj = attribute_factory(name="test_attribute")
+        assert obj.__str__() == "test_attribute"
+
+    def test_name_field_max_length(self, attribute_factory):
+        name = "x" * 101
+        obj = attribute_factory(name=name)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
+
+
+class TestAttributeValueModel:
+    def test_str_mothod(self, attribute_value_factory, attribute_factory):
+        obj_a = attribute_factory(name="test_attribute")
+        obj_b = attribute_value_factory(attribute_value="test_value", attribute=obj_a)
+        assert obj_b.__str__() == "test_attribute-test_value"
+
+    def test_value_field_max_length(self, attribute_value_factory):
+        attribute_value = "x" * 101
+        obj = attribute_value_factory(attribute_value=attribute_value)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
