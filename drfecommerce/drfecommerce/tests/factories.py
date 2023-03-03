@@ -7,8 +7,8 @@ from drfecommerce.product.models import (
     Product,
     ProductImage,
     ProductLine,
-    ProductType,
     ProductLineAttributeValue,
+    ProductType,
 )
 
 

@@ -4,10 +4,6 @@ from django.db.utils import IntegrityError
 
 from drfecommerce.product.models import Category, Product, ProductLine
 
-# from django.core.exceptions import ValidationError
-
-# from drfecommerce.product.models import ProductTypeAttribute
-
 pytestmark = pytest.mark.django_db
 
 
